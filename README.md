@@ -30,33 +30,45 @@ FacturasClaude/
 │   │   └── ErrorHandlingMiddleware.cs
 │   ├── Repositories/
 │   │   ├── Interfaces/
+│   │   │   ├── IClaudeUsageRepository.cs
 │   │   │   ├── IDocumentRepository.cs
 │   │   │   └── IInvoiceRepository.cs
+│   │   ├── ClaudeUsageRepository.cs
 │   │   ├── DocumentRepository.cs
 │   │   └── InvoiceRepository.cs
 │   ├── Services/
 │   │   ├── Interfaces/
+│   │   │   ├── IAnthropicHttpClient.cs
+│   │   │   ├── IClaudeUsageService.cs
 │   │   │   └── IInvoiceExtractionService.cs
 │   │   ├── AnthropicHttpClient.cs
+│   │   ├── ClaudeUsageService.cs
 │   │   └── InvoiceExtractionService.cs
 │   └── Program.cs
 │
 ├── FacturasClaude.Models/
+│   ├── DTOs/
+│   │   ├── AnthropicContentBlock.cs
+│   │   └── AnthropicUsage.cs
 │   ├── Entities/
+│   │   ├── ClaudeUsageRecord.cs
 │   │   ├── DocumentRecord.cs
+│   │   ├── InvoiceConcept.cs
 │   │   └── InvoiceData.cs
 │   ├── Responses/
 │   │   └── AnthropicMessageResponse.cs
 │   └── Settings/
-│       ├── AnthropicContentBlock.cs
-│       ├── AnthropicSettings.cs
-│       └── DatabaseSettings.cs
+│       └── AnthropicSettings.cs
 │
 └── FacturasClaude.Database/
-    └── dbo/
-        └── Tables/
-            ├── tDSVFACdocument.sql
-            └── tDSVFACextractedData.sql
+    ├── dbo/
+    │   └── Tables/
+    │       ├── tDSVFACclaudeUsage.sql
+    │       ├── tDSVFACdocument.sql
+    │       ├── tDSVFACextractedData.sql
+    │       └── tDSVFACinvoiceConcept.sql
+    └── Scripts/
+        └── CreateTable_tDSVFACclaudeUsage.sql
 ```
 
 ---
@@ -78,36 +90,43 @@ InvoiceController
   ▼
 DocumentRepository.InsertAsync
   │  Registra el archivo original en tDSVFACdocument
-  │  (file_name, media_type, file_size, uploaded_at)
-  │  Retorna el ID generado
+  │  Retorna el ID generado (documentId)
   │
   ▼
 InvoiceExtractionService.ExtractAsync
   │  1. Convierte el stream a Base64
   │  2. Construye el bloque de contenido:
-  │     - PDF  → type: "document"
+  │     - PDF   → type: "document"
   │     - Imagen → type: "image"
   │  3. Envía a la API de Claude con prompt de extracción
   │
   ▼
 AnthropicHttpClient.SendMessageAsync
   │  POST https://api.anthropic.com/v1/messages
-  │  Modelo configurado en AnthropicSettings
+  │  Mide el tiempo de respuesta con Stopwatch
+  │  Captura request-id del header HTTP
+  │  Retorna AnthropicMessageResponse completo:
+  │    id, model, stop_reason, content, usage, requestId, elapsedMs
+  │
+  ▼
+ClaudeUsageService.RecordAsync
+  │  Persiste el uso de la API en tDSVFACclaudeUsage:
+  │    - message_id / request_id
+  │    - model / stop_reason
+  │    - input_tokens / output_tokens
+  │    - cache_creation_tokens / cache_read_tokens
+  │    - elapsed_ms / created_at
+  │  Vinculado al documento por document_id (FK)
   │
   ▼
 InvoiceExtractionService (parseo de respuesta)
-  │  Extrae el JSON de la respuesta de Claude
-  │  Deserializa a InvoiceData:
-  │    - invoice_number
-  │    - issue_date
-  │    - total_amount
-  │    - currency
-  │    - supplier
-  │    - description
+  │  Extrae el JSON del content de Claude
+  │  Deserializa a InvoiceData
   │
   ▼
 InvoiceRepository.InsertAsync
   │  Persiste los datos extraídos en tDSVFACextractedData
+  │  Persiste los conceptos en tDSVFACinvoiceConcept
   │  Vinculado al documento por document_id (FK)
   │
   ▼
@@ -117,7 +136,7 @@ Cliente
 
 ### Manejo de errores
 
-Todos los errores no controlados son capturados por `ErrorHandlingMiddleware` antes de llegar al cliente. Las excepciones se mapean a códigos HTTP:
+Todos los errores no controlados son capturados por `ErrorHandlingMiddleware`. Las excepciones se mapean a códigos HTTP:
 
 | Excepción | HTTP |
 |---|---|
@@ -135,17 +154,27 @@ Todos los errores no controlados son capturados por `ErrorHandlingMiddleware` an
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=FacturasClaude;Trusted_Connection=True;Encrypt=False"
+    "DefaultConnection": "Server=localhost;Database=FacturasClaude.Database;Trusted_Connection=True;TrustServerCertificate=True;"
   },
   "Anthropic": {
     "ApiKey": "",
-    "Model": "claude-opus-4-5",
-    "Version": "2023-06-01"
+    "Model": "claude-sonnet-4-6",
+    "MaxTokens": 1024
   }
 }
 ```
 
 > La `ApiKey` debe configurarse en User Secrets, nunca en `appsettings.json`.
+
+### Cambiar el modelo
+
+Edita el campo `Model` en `appsettings.json`. No requiere recompilar.
+
+| Modelo | ID |
+|---|---|
+| Opus 4.7 (más capaz) | `claude-opus-4-7` |
+| Sonnet 4.6 (balance) | `claude-sonnet-4-6` |
+| Haiku 4.5 (más rápido) | `claude-haiku-4-5-20251001` |
 
 ### User Secrets
 
@@ -155,7 +184,7 @@ dotnet user-secrets set "Anthropic:ApiKey" "sk-ant-..."
 
 ### Base de datos
 
-Ejecutar los scripts de `FacturasClaude.Database/dbo/Tables/` en SQL Server antes de iniciar la API.
+Ejecutar los scripts de `FacturasClaude.Database/dbo/Tables/` en SQL Server antes de iniciar la API. Para `tDSVFACclaudeUsage` también está disponible el script idempotente en `Scripts/CreateTable_tDSVFACclaudeUsage.sql`.
 
 ### Tipos de archivo soportados
 
@@ -197,6 +226,7 @@ Mover las queries SQL inline de los repositorios a stored procedures en `Factura
 - `pDSVFACgetDocumentById`
 - `pDSVFACinsertExtractedData`
 - `pDSVFACgetExtractedDataByDocumentId`
+- `pDSVFACinsertClaudeUsage`
 
 ### Endpoint de consulta
 Agregar `GET /api/invoice/{documentId}` para recuperar los datos extraídos de una factura previamente procesada.
@@ -209,9 +239,6 @@ Endpoint `POST /api/invoice/batch` para procesar múltiples facturas en una sola
 
 ### Versionado de prompts
 Externalizar el prompt de extracción a configuración o base de datos para permitir ajustes sin redespliegue.
-
-### Auditoría de extracción
-Registrar métricas por extracción: tiempo de respuesta de Claude, confianza del resultado, número de campos nulos.
 
 ### Validación humana
 Flujo opcional de revisión manual para facturas donde la extracción tenga campos críticos nulos.

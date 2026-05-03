@@ -26,12 +26,13 @@ builder.Services.AddSwaggerGen();
 builder.Services.Configure<AnthropicSettings>(
     builder.Configuration.GetSection("Anthropic"));
 
-builder.Services.AddHttpClient<AnthropicHttpClient>(client =>
-{
-    client.BaseAddress = new Uri("https://api.anthropic.com/");
-    client.DefaultRequestHeaders.Add("x-api-key", anthropicApiKey);
-    client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-});
+builder.Services.AddHttpClient<IAnthropicHttpClient, AnthropicHttpClient>()
+    .ConfigureHttpClient(client =>
+    {
+        client.BaseAddress = new Uri("https://api.anthropic.com/");
+        client.DefaultRequestHeaders.Add("x-api-key", anthropicApiKey);
+        client.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+    });
 
 var app = builder.Build();
 

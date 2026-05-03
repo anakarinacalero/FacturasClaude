@@ -1,12 +1,13 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using FacturasClaude.Api.Services.Interfaces;
 using FacturasClaude.Models.Responses;
 using FacturasClaude.Models.Settings;
 using Microsoft.Extensions.Options;
 
 namespace FacturasClaude.Api.Services;
 
-public class AnthropicHttpClient
+public class AnthropicHttpClient : IAnthropicHttpClient
 {
     private readonly HttpClient _httpClient;
     private readonly AnthropicSettings _settings;
@@ -16,17 +17,13 @@ public class AnthropicHttpClient
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public AnthropicHttpClient(
-        HttpClient pHttpClient,
-        IOptions<AnthropicSettings> pSettings)
+    public AnthropicHttpClient(HttpClient pHttpClient,IOptions<AnthropicSettings> pSettings)
     {
         _httpClient = pHttpClient;
         _settings = pSettings.Value;
     }
 
-    public async Task<string> SendMessageAsync(
-        object[] pMessages,
-        CancellationToken pCancellationToken = default)
+    public async Task<string> SendMessageAsync(object[] pMessages,CancellationToken pCancellationToken = default)
     {
         var request = new
         {

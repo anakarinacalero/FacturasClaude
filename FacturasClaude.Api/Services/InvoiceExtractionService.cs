@@ -9,7 +9,7 @@ namespace FacturasClaude.Api.Services;
 
 public class InvoiceExtractionService : IInvoiceExtractionService
 {
-    private readonly AnthropicHttpClient _anthropicClient;
+    private readonly IAnthropicHttpClient _anthropicClient;
     private readonly ILogger<InvoiceExtractionService> _logger;
 
     private const string ExtractionPrompt = """
@@ -38,9 +38,7 @@ public class InvoiceExtractionService : IInvoiceExtractionService
         If the invoice has no line items, return concepts as an empty array.
         """;
 
-    public InvoiceExtractionService(
-        AnthropicHttpClient pAnthropicClient,
-        ILogger<InvoiceExtractionService> pLogger)
+    public InvoiceExtractionService(IAnthropicHttpClient pAnthropicClient,ILogger<InvoiceExtractionService> pLogger)
     {
         _anthropicClient = pAnthropicClient;
         _logger = pLogger;

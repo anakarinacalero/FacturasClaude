@@ -17,8 +17,10 @@ var anthropicApiKey =
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IInvoiceExtractionService, InvoiceExtractionService>();
+builder.Services.AddScoped<IClaudeUsageService, ClaudeUsageService>();
 builder.Services.AddScoped<IDocumentRepository>(_ => new DocumentRepository(connectionString));
 builder.Services.AddScoped<IInvoiceRepository>(_ => new InvoiceRepository(connectionString));
+builder.Services.AddScoped<IClaudeUsageRepository>(_ => new ClaudeUsageRepository(connectionString));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

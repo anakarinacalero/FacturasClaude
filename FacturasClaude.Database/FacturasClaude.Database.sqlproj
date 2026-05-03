@@ -58,10 +58,15 @@
     <Folder Include="Properties" />
     <Folder Include="dbo\Tables\" />
     <Folder Include="dbo\" />
+    <Folder Include="Scripts\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\tDSVFACdocument.sql" />
     <Build Include="dbo\Tables\tDSVFACextractedData.sql" />
     <Build Include="dbo\Tables\tDSVFACinvoiceConcept.sql" />
+    <Build Include="dbo\Tables\tDSVFACclaudeUsage.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Scripts\CreateTable_tDSVFACclaudeUsage.sql" />
   </ItemGroup>
 </Project>

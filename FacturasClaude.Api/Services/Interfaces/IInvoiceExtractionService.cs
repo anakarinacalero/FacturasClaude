@@ -4,5 +4,5 @@ namespace FacturasClaude.Api.Services.Interfaces;
 
 public interface IInvoiceExtractionService
 {
-    Task<InvoiceData> ExtractAsync(Stream pFileStream, string pMediaType, CancellationToken pCancellationToken = default);
+    Task<InvoiceData> ExtractAsync(Stream pFileStream, string pMediaType, int pDocumentId, CancellationToken pCancellationToken = default);
 }

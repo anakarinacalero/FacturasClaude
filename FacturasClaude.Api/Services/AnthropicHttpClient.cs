@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FacturasClaude.Api.Services.Interfaces;
@@ -23,7 +24,7 @@ public class AnthropicHttpClient : IAnthropicHttpClient
         _settings = pSettings.Value;
     }
 
-    public async Task<string> SendMessageAsync(object[] pMessages,CancellationToken pCancellationToken = default)
+    public async Task<AnthropicMessageResponse> SendMessageAsync(object[] pMessages, CancellationToken pCancellationToken = default)
     {
         var request = new
         {
@@ -32,20 +33,28 @@ public class AnthropicHttpClient : IAnthropicHttpClient
             messages = pMessages
         };
 
+        var stopwatch = Stopwatch.StartNew();
+
         var response = await _httpClient.PostAsJsonAsync(
             "v1/messages",
             request,
             SerializerOptions,
             pCancellationToken);
 
+        stopwatch.Stop();
+
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<AnthropicMessageResponse>(
             SerializerOptions,
-            pCancellationToken);
+            pCancellationToken) ?? new AnthropicMessageResponse();
 
-        return result?.Content
-            .FirstOrDefault(c => c.Type == "text")?.Text
-            ?? string.Empty;
+        result.RequestId = response.Headers.TryGetValues("request-id", out var values)
+            ? values.FirstOrDefault()
+            : null;
+
+        result.ElapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+        return result;
     }
 }

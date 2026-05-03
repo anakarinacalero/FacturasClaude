@@ -1,0 +1,70 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{cs,csx}]
+indent_size = 4
+max_line_length = 120
+
+# ──────── C# style ────────
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_prefer_braces = true:warning
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_elsewhere = false:suggestion
+csharp_style_expression_bodied_methods = false:none
+csharp_style_namespace_declarations = file_scoped:warning
+
+# ──────── Async ────────
+dotnet_diagnostic.CS4014.severity = error   # awaitable not awaited
+dotnet_diagnostic.CS1998.severity = warning # async without await
+dotnet_diagnostic.VSTHRD110.severity = warning
+dotnet_diagnostic.VSTHRD003.severity = warning
+
+# ──────── Naming: campos privados con _ ────────
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_rule.private_fields_underscore.symbols  = private_fields
+dotnet_naming_rule.private_fields_underscore.style    = underscore_camel
+
+dotnet_naming_symbols.private_fields.applicable_kinds           = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_fields.required_modifiers         =
+
+dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_style.underscore_camel.capitalization  = camel_case
+
+# ──────── Naming: interfaces con I ────────
+dotnet_naming_rule.interfaces_start_with_i.severity = error
+dotnet_naming_rule.interfaces_start_with_i.symbols  = interface_symbols
+dotnet_naming_rule.interfaces_start_with_i.style    = interface_style
+
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+
+dotnet_naming_style.interface_style.required_prefix = I
+dotnet_naming_style.interface_style.capitalization  = pascal_case
+
+# ──────── Naming: tipos y miembros públicos en PascalCase ────────
+dotnet_naming_rule.types_pascal.severity = warning
+dotnet_naming_rule.types_pascal.symbols  = type_symbols
+dotnet_naming_rule.types_pascal.style    = pascal_case_style
+
+dotnet_naming_symbols.type_symbols.applicable_kinds = class, struct, interface, enum, delegate, method, property, event
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+[*.{json,yml,yaml,md}]
+indent_size = 2
+
+[*.{csproj,sln,props,targets}]
+indent_size = 2
+
+[*.sql]
+indent_size = 4

@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="FacturasClaude.Api/FacturasClaude.Api.csproj" />
+  <Project Path="FacturasClaude.Database/FacturasClaude.Database.sqlproj" Id="d6a587e4-cff6-4b5b-964d-48835ccde3c4">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="FacturasClaude.Models/FacturasClaude.Models.csproj" />
+</Solution>

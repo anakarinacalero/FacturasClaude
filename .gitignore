@@ -1,0 +1,74 @@
+# ──────── Claude Code ────────
+.claude/settings.local.json
+.claude/.credentials.json
+.claude/cache/
+.claude/logs/
+
+# ──────── .NET ────────
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# ──────── Configuración sensible ────────
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.local.json
+secrets.json
+# .env contiene secretos reales — NUNCA commitear
+.env
+.env.local
+.env.*.local
+# .env.example SÍ se commitea (solo placeholders, sin valores reales)
+!.env.example
+*.pfx
+*.pem
+*.key
+*.crt
+
+# ──────── Tooling ────────
+.vs/
+.vscode/
+.idea/
+*.swp
+
+# ──────── Logs / caches ────────
+*.log
+logs/
+TestResults/
+coverage/
+.coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# ──────── OS ────────
+.DS_Store
+Thumbs.db
+
+# ──────── SQL Database Projects ────────
+*.dbmdl
+*.jfm
+*.dbproj.schemaview
+
+# Publicaciones
+publish/
+artifacts/
+
+# NuGet
+*.nupkg
+packages/
+
+# Rider / Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# SQL temp
+*.dacpac
+*.bacpac

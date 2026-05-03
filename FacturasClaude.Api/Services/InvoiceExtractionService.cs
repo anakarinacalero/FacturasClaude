@@ -21,8 +21,21 @@ public class InvoiceExtractionService : IInvoiceExtractionService
           "total_amount": number or null,
           "currency": "ISO 4217 code or null",
           "supplier": "string or null",
-          "description": "string or null"
+          "client_address": "string or null (full address of the client/recipient)",
+          "client_zip_code": "string or null (postal code of the client/recipient)",
+          "description": "string or null",
+          "taxes": number or null (total tax amount on the invoice),
+          "concepts": [
+            {
+              "description": "string",
+              "quantity": number or null,
+              "unit_of_measure": "string or null (e.g. pcs, kg, hrs)",
+              "unit_price": number or null,
+              "subtotal": number or null
+            }
+          ]
         }
+        If the invoice has no line items, return concepts as an empty array.
         """;
 
     public InvoiceExtractionService(

@@ -19,6 +19,18 @@ public class InvoiceData
     [JsonPropertyName("supplier")]
     public string? Supplier { get; set; }
 
+    [JsonPropertyName("client_address")]
+    public string? ClientAddress { get; set; }
+
+    [JsonPropertyName("client_zip_code")]
+    public string? ClientZipCode { get; set; }
+
     [JsonPropertyName("description")]
     public string? Description { get; set; }
+
+    [JsonPropertyName("taxes")]
+    public decimal? Taxes { get; set; }
+
+    [JsonPropertyName("concepts")]
+    public List<InvoiceConcept>? Concepts { get; set; }
 }

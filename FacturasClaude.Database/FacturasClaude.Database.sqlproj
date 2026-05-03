@@ -62,5 +62,6 @@
   <ItemGroup>
     <Build Include="dbo\Tables\tDSVFACdocument.sql" />
     <Build Include="dbo\Tables\tDSVFACextractedData.sql" />
+    <Build Include="dbo\Tables\tDSVFACinvoiceConcept.sql" />
   </ItemGroup>
 </Project>

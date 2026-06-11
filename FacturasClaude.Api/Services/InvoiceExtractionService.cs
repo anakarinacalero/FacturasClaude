@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using FacturasClaude.Api.Services.Interfaces;
-using FacturasClaude.Models.Entities;
 using FacturasClaude.Models.DTOs;
+using FacturasClaude.Models.Entities;
 using FacturasClaude.Models.Responses;
 
 namespace FacturasClaude.Api.Services;
@@ -10,21 +10,22 @@ namespace FacturasClaude.Api.Services;
 public class InvoiceExtractionService : IInvoiceExtractionService
 {
     private readonly IAnthropicHttpClient _anthropicClient;
+    private readonly IClaudeUsageService _claudeUsageService;
     private readonly ILogger<InvoiceExtractionService> _logger;
 
     private const string ExtractionPrompt = """
-        Analyze this invoice document and extract the following information.
-        Return ONLY a valid JSON object with exactly these fields (use null for missing values):
+        Analiza esta factura y extrae la siguiente información.
+        Devuelve ÚNICAMENTE un objeto JSON válido con exactamente estos campos (usa null para valores faltantes):
         {
           "invoice_number": "string or null",
-          "issue_date": "YYYY-MM-DD (required)",
+          "issue_date": "YYYY-MM-DD (requerido)",
           "total_amount": number or null,
           "currency": "ISO 4217 code or null",
           "supplier": "string or null",
-          "client_address": "string or null (full address of the client/recipient)",
-          "client_zip_code": "string or null (postal code of the client/recipient)",
+          "client_address": "string or null (dirección completa del cliente/destinatario)",
+          "client_zip_code": "string or null (código postal del cliente/destinatario)",
           "description": "string or null",
-          "taxes": number or null (total tax amount on the invoice),
+          "taxes": number or null (importe total de impuestos en la factura),
           "concepts": [
             {
               "description": "string",
@@ -35,17 +36,18 @@ public class InvoiceExtractionService : IInvoiceExtractionService
             }
           ]
         }
-        If the invoice has no line items, return concepts as an empty array.
+        Si la factura no tiene líneas de detalle, devuelve concepts como un arreglo vacío.
         """;
 
-    public InvoiceExtractionService(IAnthropicHttpClient pAnthropicClient,ILogger<InvoiceExtractionService> pLogger)
+    public InvoiceExtractionService(IAnthropicHttpClient pAnthropicClient,IClaudeUsageService pClaudeUsageService,ILogger<InvoiceExtractionService> pLogger)
     {
-        _anthropicClient = pAnthropicClient;
-        _logger = pLogger;
+        _anthropicClient    = pAnthropicClient;
+        _claudeUsageService = pClaudeUsageService;
+        _logger             = pLogger;
     }
 
     public async Task<InvoiceData> ExtractAsync(
-        Stream pFileStream,string pMediaType,CancellationToken pCancellationToken = default)
+        Stream pFileStream, string pMediaType, int pDocumentId, CancellationToken pCancellationToken = default)
     {
         var base64Data = await ToBase64Async(pFileStream, pCancellationToken);
 
@@ -62,7 +64,13 @@ public class InvoiceExtractionService : IInvoiceExtractionService
             }
         };
 
-        var responseText = await _anthropicClient.SendMessageAsync(messages, pCancellationToken);
+        var response = await _anthropicClient.SendMessageAsync(messages, pCancellationToken);
+
+        await _claudeUsageService.RecordAsync(pDocumentId, response, pCancellationToken);
+
+        var responseText = response.Content
+            .FirstOrDefault(c => c.Type == "text")?.Text
+            ?? string.Empty;
 
         return ParseInvoiceData(responseText);
     }

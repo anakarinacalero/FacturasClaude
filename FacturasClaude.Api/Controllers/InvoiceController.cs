@@ -59,7 +59,7 @@ public class InvoiceController : ControllerBase, IInvoiceController
         var documentId = await _documentRepository.InsertAsync(document, pCancellationToken);
 
         await using var stream = pFile.OpenReadStream();
-        var invoiceData = await _extractionService.ExtractAsync(stream, pFile.ContentType, pCancellationToken);
+        var invoiceData = await _extractionService.ExtractAsync(stream, pFile.ContentType, documentId, pCancellationToken);
 
         await _invoiceRepository.InsertAsync(invoiceData, documentId, pCancellationToken);
 
